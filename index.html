@@ -1,0 +1,93 @@
+<html>
+	<meta charset="UTF-8">
+	<head>
+		<title>Light and Matter</title>
+		<link rel="stylesheet" href="cool.css">
+		<link rel="stylesheet" href="slider.css">
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+		<script src="./three.min.js"></script>
+		<script src="./OrbitControls.js"></script>
+		<script src="./Stats.js"></script>
+		<!--<script src="./interface.js"></script>  -->
+		<script src="./lib.js"></script>
+		<script src="./laser.js"></script>
+		<script src="./atom.js"></script>
+		<script src="./cool_params.js"></script>
+		<script src="./content.js"></script> 
+		<script src="./cool_main.js"></script>
+
+	</head>
+
+	<body>
+		<section class="summary">
+			<nav>
+				<h1>Chapters</h1>
+				<ol>
+					<li>Light</li>
+					<li>Atoms</li>
+				</ol>
+			</nav>
+			<h1>Now</h1>
+			<section id="slide-desc">
+				<p>
+					Description of action goes here.  If you are seeing 
+					this, an error may have occured or the page may still 
+					be loading.
+				</p>
+			</section>
+			<section class="legend" style="vertical-align: bottom;">
+				<h1>Legend</h1>
+				<p id="legend-content">
+					Legend of chapter visual objects
+			</section>
+		</section>
+		<main class="oGLRender">
+			<p> OpenGL contnent should display here momentarily.  
+				If you are seeing 
+				this There may have been an error </p>
+		</main>
+		<nav class="bottom"> 
+			<ul id="controls">
+
+			</ul>
+		</nav>
+		<script>
+			$(document).ready(function(){
+				init();
+				animate();
+			});
+		</script>
+		<section id="controls" class="hidden">
+			<li id=empty></li>
+			<li id="navback">
+				<img style="transform: rotate(90deg)" src="assets/arrow_down.svg" alt="back"
+				></img>
+			</li>
+			<li id="navreset">
+				<img id="reset-frame" style="transform: rotate(180deg);" src="assets/arrow_down.svg" alt="reset">
+				</img>
+				<h4>Reset</h4>
+			</li>			
+			<li id="navforward">
+				<a href="#">
+					<img id="forward" style="transform: rotate(-90deg)" src="assets/arrow_down.svg" alt="forward">
+					</img>
+				</a>
+			</li>
+			<li id="sliderControl" class="slider">
+				<img src="assets/dot_tb.png" alt="slider image" class="sliderimg"> 
+				<input type="range" class="slider" min="-1" max="1" step="0.01">
+				<h1>Name</h1>
+			</li>
+			<li id="buttonControl">
+				<button class="off">Name</button>
+			</li>
+
+		</section>
+	</body>
+	<!--<section class='hidden'>
+		<p id='c1s1'> hello</p>
+	</section>-->
+</html>
+

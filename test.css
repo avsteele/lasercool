@@ -1,0 +1,63 @@
+:root {
+    --side_w: 15%;
+    --main_h: 85%;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body,
+h1, h2, h3, h4, h5, h6,
+p, ul, ol, li, a {
+    padding: 0;
+    border: 0;
+    margin: 0;
+    font: inherit;
+    font-size: 100%;
+}
+
+body {
+    display: grid;
+    grid-template-rows: var(--main_h) auto; 
+    grid-template-columns: var(--side_w) auto;
+    grid-template-areas: "side main"
+                         "nav nav";
+    height: 100%;
+    width:100%;
+    background-color: #FA2895;
+}
+
+.c1 {
+    background-color:red;
+    grid-area: side;
+}
+
+p {
+    grid-area: inherit;
+    background-color: inherit;
+}
+
+.c2 {
+    background-color:yellow;
+    grid-area: main;
+}
+
+nav.c3 {
+    background-color:green;
+    grid-area: nav;
+}
+
+ul{
+    list-style-type: none;
+    display: flex;
+    justify-content: space-between;
+    margin-top: -1px;
+    align-items: center;
+    height: calc(100% - var(--main_h));
+}
+
+img {
+    display: block;
+    height: 50%;
+}
