@@ -59,9 +59,7 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     var camera = mainCamera;
     camera.position.z = 8;
     var scene = mainScene; 
-    // TODO: set legend variables
-
-    // TODO: delete all objects in scene
+    // TODO: Legend
 
     var descLoc = $('#slide-desc');
     var fetchURL = 'chapter1.html';  //additional content
@@ -72,8 +70,15 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     var controls = [];
     //setup controls for each slide
     controls[1] = ["#navback", "#buttonControl", "#navreset", "#empty", "#navforward"];
+    controls[2] = ["#navback", "#empty", "#navreset", "#empty", "#navforward"];
 
+    /**
+     * common setup for all slides in this chapter
+     */
     this.loadSlideCommon = function(){
+        //empty scene
+        emptyTHREEChildTypes(scene, ['Group', 'Mesh', 'Points', 'LineSegments']);
+        
         //load slide description
         if( ! replaceSlideDesc( chapter, slide)){
             $.get( fetchURL, function(result){
@@ -120,17 +125,27 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         ).find('button').text('Photons');
     }
 
+    this.loadSlide2 = function(){
+        this.loadSlideCommon();
+    }
+
     this.loadSlide = function(){
         //validate slide change
         switch(slide){
             case 1:
                 this.loadSlide1();
                 break;
+            case 2:
+                this.loadSlide2();
+                break;
             default:
                 throw new Error("unknown slide :"+slide);
         }
     }
 
+    /**
+     * Update the slide by a single frame.
+     */
     this.update = function(frame){
         for(const b of beams)
             b.update(frame);
@@ -140,4 +155,5 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     }
 
     this.loadSlide();
+    // emptyTHREEChildTypes(scene, ['Group', 'Mesh', 'Points', 'LineSegments']);  //lights too?
 }

@@ -51,6 +51,39 @@ function randVec3(r=1){
     return new THREE.Vector3().setFromSpherical(s);
 }
 
+/// THREE core/////
+/**
+ * deletes child objects that are THREE types included in the 'types' parameter
+ * array
+ * @param {THREE.Object3D} threeObj3D 
+ * @param {array} types strings representing THREE.types 
+ */
+function emptyTHREEChildTypes(threeObj3D, types){
+    if(!exists(threeObj3D.children)) return;
+    if( threeObj3D.children.constructor != Array) throw Error("expected child array");
+    var loopArray = threeObj3D.children.slice(0);  //need to copy since changed in loop
+    for(const child of loopArray){
+        if(exists(child.type) && types.includes(child.type)){
+            switch(child.type){
+                case 'Mesh':
+                case 'Points':
+                case 'LineSegments':
+                    threeObj3D.remove(child);
+                    child.geometry.dispose();
+                    child.material.dispose();
+                    break;
+                case 'Group':
+                    threeObj3D.remove(child);
+                    emptyTHREEChildTypes(child, types);
+                    break;
+                default:
+                    throw Error("emptyTHREEChildTypes was asked to remove a \
+                                "+child.type+" but doesn't know how");
+            }
+        }
+    }
+}
+
 /////assorted helpers //////
 function rand(min,max){
     return Math.random()*(max-min)+min
