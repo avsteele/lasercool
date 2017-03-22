@@ -38,9 +38,16 @@ function replaceSlideDesc(chapter, slide){
     var loc = $('#slide-desc');
     
     var selector = '#c'+chapter+'s'+slide;
-    if( ! $(selector).length) return false;
+    if( ! $(selector).length) return false;  //don't have it
+    newDesc = $(selector).clone().attr("id",selector+'-clone');
     loc.empty();
-    loc.append($(selector));
+    newDesc.hide();
+    loc.append(newDesc);
+    // newDesc.addClass('live');
+
+    //hate to put styling here, but between x-browser issues and finikyness
+    //    with it not working if the section loads too quickly...
+    newDesc.fadeIn({duration:600});  
     return true;
 }
 
@@ -61,7 +68,7 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     var scene = mainScene; 
     // TODO: Legend
 
-    var descLoc = $('#slide-desc');
+    // var descLoc = $('#slide-desc');
     var fetchURL = 'chapter1.html';  //additional content
     var beams = [];
     var chapter = 1;
@@ -98,14 +105,14 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
                 slide++;
                 chapterContext.loadSlide(slide);
             }
-        )
+        );
         $('#navback'+controlIDPostFix).on('click', 
             function(event){ 
                 event.preventDefault();
                 slide--;
                 chapterContext.loadSlide(slide);
             }
-        )        
+        ); 
     }
 
     this.loadSlide1 = function(){
@@ -123,6 +130,13 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
                 swapClass($(this), 'on', 'off');
             }
         ).find('button').text('Photons');
+
+        $('#navreset11').on('click', 
+            function(event){ 
+                event.preventDefault();
+                chapterContext.loadSlide(slide);
+            }
+        );        
     }
 
     this.loadSlide2 = function(){

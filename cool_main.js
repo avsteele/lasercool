@@ -59,6 +59,8 @@ function init() {
 
     // testIni();
     currentChapter = new Chapter1( renderer1, camera1, scene1);
+    $('body').hide();
+    $('body').fadeIn({duration:600});
 }
 /////////////////////main////////////////////////
 function animate(){

@@ -53,6 +53,9 @@ section.summary {
     grid-area: side;
 }
 
+a {
+    color: #888888;
+}
 section.summary ol {
     font-size: 24px;
     list-style: initial;
@@ -64,6 +67,15 @@ section.summary ol {
 /*section.legend {
     bottom: 10px;
     padding-bottom: 1em;
+}*/
+
+/*
+section.chapter.live {
+    transition: opacity 1s linear;
+    opacity: 1;
+/
+section.chapter {
+    opacity: 0;
 }*/
 
 main.oGLRender {
