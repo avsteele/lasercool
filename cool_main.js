@@ -22,9 +22,26 @@ var frame=0; //frame counter
 ///////////////////setup and update functions per demo ////////////
 
 function testIni(){
+    test = true;
+
+    var geo = new THREE.SphereBufferGeometry(5, 32, 32);
+    //special thanks:
+    //http://www.shadedrelief.com/natural3/pages/textures.html
+    this.tex= new THREE.TextureLoader().load( 'assets/earth_tex_sm.jpg' );
+    var mat = new THREE.MeshPhongMaterial( {
+        // color: 0x0000FF, 
+        emissive: 0x444444,
+        specular: 0x00FF00,
+        shininess: 0,
+        map: tex});
+
+    var mesh = new THREE.Mesh(geo, mat);
+    scene1.add(mesh);
+
     return;
 }
 function testUpdate(){
+    renderer1.render(scene1, camera1);
     return;
 }
 
@@ -50,17 +67,34 @@ function init() {
 	// Camera 
     var dims = renderer1.getSize();
     var aspect = dims.width/dims.height;
-    camera1 = new THREE.PerspectiveCamera(75, aspect, 1, 500);
-    camera1.position.z = 8;
+    camera1 = new THREE.PerspectiveCamera(45, aspect, 1, 500);
+    camera1.position.z = 35;
     controls = new THREE.OrbitControls(camera1, renderer1.domElement);
 
     var light = new THREE.AmbientLight( 0x888888);
     scene1.add(light);
 
     // testIni();
-    currentChapter = new Chapter1( renderer1, camera1, scene1);
+    $('nav').on('click', '#navc1', 
+        function(event){
+            event.preventDefault();
+            currentChapter = new Chapter1(renderer1, camera1, scene1);
+            console.log('load chapter 1');
+        }
+    );
+    $('nav').on('click', '#navc2', 
+        function(event){
+            event.preventDefault();
+            // currentChapter = new Chapter2(renderer1, camera1, scene1);
+            console.log('load chapter 2');
+        }
+    );
+
+
     $('body').hide();
     $('body').fadeIn({duration:600});
+
+    testIni();
 }
 /////////////////////main////////////////////////
 function animate(){
@@ -81,6 +115,7 @@ function animate(){
     if(exists(currentChapter)) currentChapter.update(frame);
 
     controls.update();
+    // TODO: reset pan?
     // stats.begin();
 
     // stats.end();

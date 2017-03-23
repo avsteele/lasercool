@@ -34,6 +34,17 @@ function demo1Update(f){
     renderer1.render(scene1, camera1);
 }
 
+/**
+ * containerize entry actions and animations in case I decide to move to using
+ * css laster
+ */
+function onEntryAnimateStd(element){
+    //hate to put styling here, but between x-browser issues and finikyness
+    //    with it not working if the section loads too quickly...    
+    element.hide();
+    element.fadeIn({duration:400});
+}
+
 function replaceSlideDesc(chapter, slide){
     var loc = $('#slide-desc');
     
@@ -41,22 +52,18 @@ function replaceSlideDesc(chapter, slide){
     if( ! $(selector).length) return false;  //don't have it
     newDesc = $(selector).clone().attr("id",selector+'-clone');
     loc.empty();
-    newDesc.hide();
     loc.append(newDesc);
-    // newDesc.addClass('live');
-
-    //hate to put styling here, but between x-browser issues and finikyness
-    //    with it not working if the section loads too quickly...
-    newDesc.fadeIn({duration:600});  
+    onEntryAnimateStd(newDesc);
     return true;
 }
 
 function loadChildren(container, idArray, idPostFix){
     container.empty();
     for(let id of idArray){
-        var newel = $(id).clone();
-        newel.attr("id",id.slice(1)+idPostFix);
-        newel.appendTo(container);
+        var newEl = $(id).clone();
+        newEl.attr("id",id.slice(1)+idPostFix);
+        newEl.appendTo(container);
+        onEntryAnimateStd(newEl);
     }
 }
 
@@ -64,7 +71,6 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
                         legendRender, legendCamera, legendScene){
     var renderer = mainRenderer;
     var camera = mainCamera;
-    camera.position.z = 8;
     var scene = mainScene; 
     // TODO: Legend
 
@@ -78,6 +84,8 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     //setup controls for each slide
     controls[1] = ["#navback", "#buttonControl", "#navreset", "#empty", "#navforward"];
     controls[2] = ["#navback", "#empty", "#navreset", "#empty", "#navforward"];
+    //TODO: setup camera settings for each scene
+    camera.position.z = 15;
 
     /**
      * common setup for all slides in this chapter
@@ -169,5 +177,4 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     }
 
     this.loadSlide();
-    // emptyTHREEChildTypes(scene, ['Group', 'Mesh', 'Points', 'LineSegments']);  //lights too?
 }
