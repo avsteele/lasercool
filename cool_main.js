@@ -21,6 +21,10 @@ var frame=0; //frame counter
 
 ///////////////////setup and update functions per demo ////////////
 
+//////testing
+// var mouse = { down:false, lastX: 0, lastY:0};
+var cube;
+
 function testIni(){
     test = true;
 
@@ -36,10 +40,31 @@ function testIni(){
         map: tex});
 
     var mesh = new THREE.Mesh(geo, mat);
-    scene1.add(mesh);
+    // scene1.add(mesh);
+
+    var len = 50;
+    var geo = new THREE.BoxBufferGeometry(len,1,1);
+    geo.translate(len/2,0,0);
+    var material = new THREE.MeshBasicMaterial({color: 0x00FF00});
+    cube = new THREE.Mesh(geo, material);
+    cube.position.x = -len/2;
+    cube.visible = true;
+    var pi = Math.PI;
+    cube.up = new THREE.Vector3(0,0,1);
+    var ang = pi/8;
+    // cube.lookAt( new THREE.Vector3(0,-100,0));
+    cube.lookAt( new THREE.Vector3(0,len*Math.tan(ang-pi/2),0));
+    var axes = new THREE.AxisHelper(10);
+    cube.add(axes);
+    scene1.add(cube);
+
+    var mdwn = function(){cube.visible= true;};
+    var mup = function(){cube.visible=false;}; 
+    // controls1 = new FireControls(renderer1, mdwn, mup)
 
     return;
 }
+
 function testUpdate(){
     renderer1.render(scene1, camera1);
     return;
@@ -61,15 +86,16 @@ function init() {
 
     scene1 = new THREE.Scene();
 
-    // var axes = new THREE.AxisHelper(10);
-    // scene1.add(axes);
+    var axes = new THREE.AxisHelper(10);
+    scene1.add(axes);
 
 	// Camera 
     var dims = renderer1.getSize();
     var aspect = dims.width/dims.height;
     camera1 = new THREE.PerspectiveCamera(45, aspect, 1, 500);
     camera1.position.z = 35;
-    controls = new THREE.OrbitControls(camera1, renderer1.domElement);
+    // TODO: move controls into each chapter 
+    controls1 = new THREE.OrbitControls(camera1, renderer1.domElement);
 
     var light = new THREE.AmbientLight( 0x888888);
     scene1.add(light);
@@ -89,7 +115,6 @@ function init() {
             console.log('load chapter 2');
         }
     );
-
 
     $('body').hide();
     $('body').fadeIn({duration:600});
@@ -114,7 +139,7 @@ function animate(){
 
     if(exists(currentChapter)) currentChapter.update(frame);
 
-    controls.update();
+    if( exists(controls1)) controls1.update();
     // TODO: reset pan?
     // stats.begin();
 
