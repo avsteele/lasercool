@@ -1,6 +1,6 @@
 //////////// Objects  ///////////////
 function Laser(params={}, photons= false, lights = true, sprites=false, streaks=false){
-    // this.eps = 1e-10; //prevent z fighting
+
     //params needs to have:
     // .  position, scale(size), euler
     //    color, dz, texture, ptclTexture
@@ -24,13 +24,20 @@ function Laser(params={}, photons= false, lights = true, sprites=false, streaks=
     if( exists(params.tex) ){
         this.texture = new THREE.TextureLoader().load( params.tex );
         this.texture.wrapS = THREE.RepeatWrapping;
-        this.texture.wrapT = THREE.RepeatWrapping;
+        this.texture.wrapT = THREE.MirroredRepeatWrapping;
+        // this.texture.repeat.set(Math.ceil(this.ra/5), this.len/5);
+        this.texture.repeat.set(this.ra, Math.ceil(this.len/20));
     } else this.texture = undefined;
     
     this.color = existsOr( params.color, 0xFFFFFF);
-    var mat = mat_beam_phong_tex(this.color, this.texture);
+    this.opacity = existsOr( params.opacity, 0.3);
+    var mat = mat_beam_phong_tex(this.color, this.texture, this.opacity);
 
     this.beam = mesh_seg_beam(mat, 2);
+    var geoOffset = existsOr(params.geoOffset, new THREE.Vector3(0,0,0));
+    for( const b of this.beam.children)
+        b.geometry.translate(geoOffset.x, geoOffset.y, 
+                                geoOffset.z );
     this.group.add( this.beam );
 
     if( photons ){        
@@ -367,14 +374,14 @@ function mat_beam_std( color, tex){
     return mat;
 }
 
-function mat_beam_phong_tex(color, tex){
+function mat_beam_phong_tex(color, tex, opacity){
     //this one looks good for two beams, each with three lights
     var mat = new THREE.MeshPhongMaterial( {
         color: color, 
-        opacity:0.3, 
+        opacity: opacity, 
         transparent: true,
         emissive: 0x000000,
-        specular: 0x00FF00,
+        specular: color,
         shininess: 0,
         // side:THREE.DoubleSide,
         depthWrite : false,

@@ -76,14 +76,17 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
 
     // var descLoc = $('#slide-desc');
     var fetchURL = 'chapter1.html';  //additional content
-    var beams = [];
+    var updateObjects = [];
     var chapter = 1;
     var slide = 1;
     var chapterContext = this;
+
+    //keyboard, mouse, touch control sets
     var controls = [];
     //setup controls for each slide
-    controls[1] = ["#navback", "#buttonControl", "#navreset", "#empty", "#navforward"];
-    controls[2] = ["#navback", "#empty", "#navreset", "#empty", "#navforward"];
+    var buttons = [];
+    buttons[1] = ["#navback", "#buttonControl", "#navreset", "#empty", "#navforward"];
+    buttons[2] = ["#navback", "#empty", "#navreset", "#empty", "#navforward"];
     //TODO: setup camera settings for each scene
     camera.position.z = 15;
 
@@ -105,7 +108,7 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         /// build nav/control bar
         var controlContainer = $('#controls');
         var controlIDPostFix =  chapter.toString()+slide;
-        loadChildren(controlContainer, controls[slide], controlIDPostFix);
+        loadChildren(controlContainer, buttons[slide], controlIDPostFix);
 
         $('#navforward'+controlIDPostFix).on('click', 
             function(event){ 
@@ -128,10 +131,12 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         //// slide 1
         var l1 = new Laser(p.chapter1.beams.slide1, true, false, false, true);
         l1.togglePhotonVis();
-        beams.push(l1);
+        updateObjects.push(l1);
         scene.add(l1.getGroup());
 
-        //speciality
+        controls.push(new THREE.OrbitControls(camera1, renderer1.domElement));
+
+        //button config
         $('#buttonControl11').on('click', 'button', 
             function(){ 
                 l1.togglePhotonVis();
@@ -149,6 +154,8 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
 
     this.loadSlide2 = function(){
         this.loadSlideCommon();
+
+
     }
 
     this.loadSlide = function(){
@@ -169,9 +176,11 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
      * Update the slide by a single frame.
      */
     this.update = function(frame){
-        for(const b of beams)
-            b.update(frame);
-
+        for(const o of updateObjects)
+            o.update(frame);
+        for( const c of controls){
+            c.update()
+        }
         renderer.render( scene, camera);
         // TODO: update, then render legend
     }
