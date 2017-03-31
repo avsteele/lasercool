@@ -96,7 +96,9 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     this.loadSlideCommon = function(){
         //empty scene
         emptyTHREEChildTypes(scene, ['Group', 'Mesh', 'Points', 'LineSegments']);
-        
+        //empty controls
+        controls = [];  
+
         //load slide description
         if( ! replaceSlideDesc( chapter, slide)){
             $.get( fetchURL, function(result){
@@ -134,7 +136,7 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         updateObjects.push(l1);
         scene.add(l1.getGroup());
 
-        controls.push(new THREE.OrbitControls(camera1, renderer1.domElement));
+        controls.push(new THREE.OrbitControls(camera, renderer.domElement));
 
         //button config
         $('#buttonControl11').on('click', 'button', 

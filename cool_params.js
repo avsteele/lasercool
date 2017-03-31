@@ -52,8 +52,22 @@ ref.tex = 'assets/earth_tex_sm.jpg';
 p.chapter1.slide2.beam = cloneObj(p.std.beam1);
 ref = p.chapter1.slide2.beam;
 ref.scale = new THREE.Vector3(0.1, 0.1, 2*5*sl2scale);
-ref.euler.order = "YXZ";
+// ref.euler.order = "YXZ";
+ref.euler = new THREE.Euler( 0, Math.PI/2, 0, 'YXZ');
 ref.position.x = -ref.scale.z/2+sl2scale;
 ref.opacity = 1.0;
 ref.geoOffset = new THREE.Vector3( 0, 0, 0.5);
 ref.tex = undefined;
+
+p.chapter1.slide2.sail = {};
+ref = p.chapter1.slide2.sail;
+ref.position = new THREE.Vector3();
+ref.scale = new THREE.Vector3(3,3,3);
+ref.euler = new THREE.Euler(0, 0, Math.PI/2);
+ref.velocity0 = new THREE.Vector3(0.05,0.0,0);
+
+p.chapter1.slide2.stars = {};
+ref = p.chapter1.slide2.stars;
+ref.position= new THREE.Vector3();
+ref.euler= new THREE.Euler();
+ref.scale = new THREE.Vector3(1,1,1);

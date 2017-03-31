@@ -26,6 +26,9 @@ var frame=0; //frame counter
 // var cube;
 var laser; 
 var earth;
+var sail;
+var raycaster;
+var stars;
 
 function testIni(){
     test = true;
@@ -39,29 +42,27 @@ function testIni(){
 
     laser =  new Laser(p.chapter1.slide2.beam, false, false, false, false );
     laser.getGroup().scale.z = 1e-3;
-    var axes = new THREE.AxisHelper(10);
-    laser.getGroup().add(axes);
+    // var axes = new THREE.AxisHelper(5);
+    // laser.getGroup().add(axes);
     // laser.beam.add(axes);
-
     scene1.add(laser.getGroup());
 
-    // var v1 = laser.getGroup().position.clone();
-    // var mvm4 = camera1.matrixWorldInverse;
-    // var pm4 = camera1.projectionMatrix;
-    // v1.applyMatrix4(mvm4);
-    // v1.applyMatrix4(pm4);
-    // console.log("model first ", v1);
-    // var v1 = laser.getGroup().position.clone();   
-    // v1.applyMatrix4(pm4);
-    // v1.applyMatrix4(mvm4);
-    // console.log("proj first ", v1);
+    sail = new SolarSail(p.chapter1.slide2.sail);
+    scene1.add(sail.getGroup());
+
+    stars = new StarField(p.chapter1.slide2.stars);
+    scene1.add(stars.getGroup());
+
+    raycaster = new THREE.Raycaster();
 
     var mmov = function(x,y, ang2D){
         //reset angle to origin, or may get strange accumulation errors that flip
         //   unrelated axes
         laser.getGroup().rotation.copy( p.chapter1.slide2.beam.euler);
-        
         laser.getGroup().rotateX(-ang2D);
+
+        raycaster.set(p.chapter1.slide2.beam.position, 
+                laser.getGroup().getWorldDirection());
     }
 
     var mdwn = function(x,y, ang2D){
@@ -70,30 +71,48 @@ function testIni(){
         laser.getGroup().position.copy( p.chapter1.slide2.beam.position ); //reset
         //set aiming
         mmov(x,y, ang2D);
+
+        raycaster.set(p.chapter1.slide2.beam.position, 
+                        laser.getGroup().getWorldDirection());
+
     }
     var mup = function(x, y, ang2D){
         // laser.getGroup().scale.z = 0.01;
         // laser.beam.position.z = 0;
         return;
     }
-    controls1 = new FireControls(renderer1, 
-                                new THREE.Vector3( 0.11, 0.5, 0),
+    controls1 = new FireControls(renderer1, camera1,
+                                p.chapter1.slide2.beam.position, 0,
                                 mdwn, mup, mmov);
+    // controls1 = new THREE.OrbitControls(camera1, renderer1.domElement)
 
-    return;
 }
 
 function testUpdate(){
     var mag =5;
-    if(controls1.isMouseDown()){
-        laser.getGroup().scale.z += mag;
+    if(exists(controls1.isMouseDown)){    
+        if(controls1.isMouseDown()){
+            laser.getGroup().scale.z += mag;
+
+            var intersect = raycaster.intersectObject(sail.sailmesh);
+            // var intersect = raycaster.intersectObject(scene1, true);
+            if(intersect.length){
+                sail.applyForce( laser.getGroup().getWorldDirection(), 
+                                intersect[0].point, 1 );
+                console.log('hit');   
+            }
+        } else {
+            // var mag = 1;
+            var vec = laser.getGroup().getWorldDirection().multiplyScalar(mag);
+            laser.getGroup().position.add( vec );
+        }
     } else {
-        // var mag = 1;
-        var vec = laser.getGroup().getWorldDirection().multiplyScalar(mag);
-        laser.getGroup().position.add( vec );
+        controls1.update();
     }
     laser.update();
     earth.update();
+    sail.update(frame);
+    stars.update();
     renderer1.render(scene1, camera1);
     return;
 }
@@ -102,7 +121,7 @@ function testUpdate(){
 function init() {
 
     // initInterface();    // in interface.js
-	renderer1 = new THREE.WebGLRenderer();
+	renderer1 = new THREE.WebGLRenderer({antialias: true});
     renderer1.setPixelRatio( window.devicePixelRatio );
     var drawTo = document.querySelector(".oGLRender");
     while (drawTo.hasChildNodes()) {
@@ -155,26 +174,11 @@ function animate(){
     requestAnimationFrame(animate);
 
     if(typeof test !== "undefined")
-        testUpdate();
+        testUpdate(frame);
 
     if(exists(currentChapter)) 
         currentChapter.update(frame);
 
     // stats.begin();
-
-
-    // var v1 = laser.getGroup().position.clone();
-    // var v = new THREE.Vector3(-26,0,0);
-    // var v1=v.clone();
-    // var mvm4 = camera1.matrixWorldInverse;
-    // var pm4 = camera1.projectionMatrix;
-    // v1.applyMatrix4(mvm4);
-    // v1.applyMatrix4(pm4);
-    // console.log("model first ", v1.clone());
-    // var v1 = v.clone();   
-    // v1.applyMatrix4(pm4);
-    // v1.applyMatrix4(mvm4);
-    // console.log("proj first ", v1.clone());
-    // stats.end();
 
 }

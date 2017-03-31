@@ -6,22 +6,28 @@
  * @param {*} mouseUpCallback 
  * @param {*} mouseMoveCallback 
  */
-var FireControls = function(renderer, 
-                    fireCenter,
+var FireControls = function(renderer, cameraIn,
+                    fireCenter, zPlane,
                     mouseDownCallback, mouseUpCallback, mouseMoveCallback){
 
     //define internal state
+    //TODO: does canvas get recreated on screen change?
     var canvas = renderer.getContext().canvas;
+    
+    //camera used for ray casting
+    var camera = cameraIn;
 
     //mouse internal state
     var mouse = { down:false, x: 0, y:0 };
 
-    //fire control state
-    //for firing in 2D plane, record angle in relation to center
-    // of last click or move
-    var ang2D = 0;
-    ///center for 2D cangle calculation in units of....
+    ///  center from which firing originates
+    //TODO: consider keeping this as a refernce, this way can trakc object movement
+    //       problem is now i have teh object moving with the beam
+    // in world coordinates
     var center = new THREE.Vector3().copy(fireCenter);
+
+    //angle, from 0..2*pi around center along which fire will travel
+    var ang2D = 0;
 
     if( !exists(mouseDownCallback) ) 
         var mouseDownCallback = function(){};
@@ -31,9 +37,10 @@ var FireControls = function(renderer,
         var mouseMoveCallback = function(){};
 
     var setMousePos = function(event){
-        var canvas = renderer1.getContext().canvas;
-        mouse.x = (event.clientX - canvas.offsetLeft)/canvas.width;
-        mouse.y = (event.clientY - canvas.offsetTop)/canvas.height;
+        // var canvas = renderer1.getContext().canvas;
+        // mouse x,y in normalized device coordinates
+        mouse.x = (event.clientX - canvas.offsetLeft)/canvas.width*2-1;
+        mouse.y = (event.clientY - canvas.offsetTop)/canvas.height*2-1;
         updateAng2D();
     }
 
@@ -60,11 +67,15 @@ var FireControls = function(renderer,
     }
 
     var updateAng2D = function(){
-        // var xoffset = center.x;  //TODO: determin from params and FOV
-        // var yoffset = center.y;
-        var ny = center.y-mouse.y;
-        var nx = (mouse.x-center.x)*camera1.aspect;
-        nx = Math.max(0.1, nx);  //limit so it doesnt pierce earth
+
+        //convert center to NDC
+        var mvm4 = camera.matrixWorldInverse;
+        var pm4 = camera.projectionMatrix;
+        var centerNDC = center.clone().applyMatrix4(mvm4).applyMatrix4(pm4);
+
+        var ny = -(mouse.y-centerNDC.y);  //since -Y at top
+        var nx = (mouse.x-centerNDC.x)*camera1.aspect;
+        // nx = Math.max(0.1, nx);  //limit so it doesnt pierce earth
         ang2D = Math.sign(ny)*Math.acos(nx/Math.sqrt(nx**2+ny**2))
     }
     this.getAng2d = function(){
