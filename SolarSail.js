@@ -1,3 +1,60 @@
+function TestObject(){
+
+    this.group = new THREE.Group();
+    this.group.position.copy( new THREE.Vector3() );
+    this.group.rotation.copy( new THREE.Euler(0, 0,0) );
+    var len = 20;
+    this.group.scale.copy( new THREE.Vector3(1,1,1) );
+
+    var geo = new THREE.BoxGeometry(1,20,20,2,2,2);  //leave size here = 1, change size in scale
+    var mat = new THREE.MeshBasicMaterial({transparent: true, opacity: 0.4, depthWrite: false, color:0xFF0000});
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.name = "box"
+    this.group.add(mesh);
+    this.main = mesh;
+
+    var ax = new THREE.AxisHelper(10);
+    this.group.add(ax);
+
+    //velo is in global coords
+    var velocity = new THREE.Vector3(0,0,0);
+    var angVelocity = 0;  //just one local axis for now
+
+    var mass = 100;
+    var centerOfMass = new THREE.Vector3();
+    // I for local Z-axis, through midpoint of plane
+    var momentInertia = mass/12*len*len;
+
+    this.update = function(frame){
+        this.group.position.add( velocity );
+        //temporary
+        this.group.rotateZ( angVelocity );
+    }
+    this.applyForce = function( pushVec, pushPos, pushMag){
+        //args are in world coords, as are velo and angVelo for object
+        //calcs easier to do in local however
+        
+        // local direction of force
+        var locPushVec = pushVec.clone().applyEuler(this.group.rotation);
+        // local position on object 
+        var locPushPos = this.group.worldToLocal(pushPos.clone());
+        // linear part
+        var dv_gl = pushVec.clone().multiplyScalar(pushMag/mass);
+        // console.log(dv_gl);
+        velocity = velocity.add(dv_gl);
+        // angular part 
+        var r = new THREE.Vector3(locPushPos.x, locPushPos.y, 0);
+        var rXdv = r.clone().cross(locPushVec.clone());
+        var dAngVelo = rXdv.z*mass/momentInertia*pushMag;
+        angVelocity += dAngVelo;
+        // console.log("pvl:",locPushVec, ' ppl: ', locPushPos);
+    }
+
+    this.getGroup = function(){
+        return this.group;
+    }
+}
+
 function SolarSail(params){
 
     this.group = new THREE.Group();
@@ -10,14 +67,17 @@ function SolarSail(params){
     if( exists(params.velocity0))
         velocity.copy(params.velocity0);
     
-    var angVelocity = new THREE.Vector3(0.0,0.0,0.000); //default
-    if( exists(params.angVelocity0))
-        angVelocity.copy(params.angVelocity0);
+    // var angVelocity = new THREE.Vector3(0.0,0.0,0.000); //default
+    // if( exists(params.angVelocity0))
+    //     angVelocity.copy(params.angVelocity0);
+    var angVelocity = 0;
 
     //center of mass in local coords
-    var centerOfMass = new THREE.Vector3(0,5,0);
-    var mass = 10000;
-    var momentInertia = 10000;
+    var mass = 100;
+    var sz =5;
+    var centerOfMass = new THREE.Vector3();
+    // I for local Z-axis, through midpoint of plane
+    var momentInertia = mass/0.1*sz*sz;
 
     if(exists(params.tex))
         var tex = new THREE.TextureLoader().load( 'assets/earth_tex_sm.jpg' );
@@ -25,9 +85,9 @@ function SolarSail(params){
         var tex = undefined;
 
     var points = [];
-    var npts = 10;
+    var npts = 20;
     for ( var i = 0; i < npts; i ++ ) {
-	    points.push( new THREE.Vector2( i/npts, (i/npts)**1.5 ) );
+	    points.push( new THREE.Vector2( sz*i/npts, sz*(i/npts/2)**2 ) );
     }
     var geo = new THREE.LatheBufferGeometry(points, 32);
     var mat = new THREE.MeshPhongMaterial( {
@@ -41,8 +101,8 @@ function SolarSail(params){
         transparent: true
     });
 
-    // this.sailmesh = THREE.SceneUtils.createMultiMaterialObject( geo, [mat, mat2] );
-    this.sailmesh = new THREE.Mesh( geo, mat );
+    this.sailmesh = THREE.SceneUtils.createMultiMaterialObject( geo, [mat, mat2] );
+    // this.sailmesh = new THREE.Mesh( geo, mat );
     this.group.add(this.sailmesh);
 
     var ax = new THREE.AxisHelper(1);
@@ -64,43 +124,29 @@ function SolarSail(params){
      * pushPos is location (should be one that intersects the sail) where the 
      *     force is applied
      */
-    this.update = function(frame, pushVec, pushPos, pushMag){
+    this.update = function(frame){
 
         this.group.position.add( velocity );
         //temporary
-        this.group.rotateZ( angVelocity.z );
-        if(frame%100==0){
-            console.log(velocity.x, angVelocity.z, this.lastMagAng.z);
-        }
-        return;
+        this.group.rotateZ( angVelocity );
+
     }
     this.lastMagAng =0;
     this.applyForce = function(  pushVec, pushPos, pushMag ){
-        var loc = pushVec.clone();
-        loc.applyEuler(this.group.rotation);
-        // if(frame%100==0){
-        //     var vecX = new THREE.Vector3(1,0,0);
-        //     var vecY = new THREE.Vector3(0,1,0);
-        //     this.group.worldToLocal(vecX);
-        //     this.group.worldToLocal(vecY);
-        //     console.log(vecX.length(), vecY.length(), pushVec.length() ,loc.length());
-        //     // console.log(vecX.add(this.group.position));
-        //     // console.log(vecX.length());
-        //     console.log(loc);
-        // }
-        //linear momentum
-        velocity.add( pushVec.clone().multiplyScalar(pushMag/mass) );
-        //angular momentum
-        var comGlobal = centerOfMass.clone();
-        this.group.localToWorld(comGlobal);
-        // console.log(comGlobal);
-        var r = pushPos.clone().sub(comGlobal);
-        var magAng = comGlobal.clone().normalize().cross(r.normalize());
-        // var sign = Math.sign(magAng.z);
-        // magAng.normalize();
-        this.lastMagAng = magAng;
-        angVelocity.z += magAng.z/momentInertia;
-        // console.log(magAng);
+        // local direction of force
+        var locPushVec = pushVec.clone().applyEuler(this.group.rotation);
+        // local position on object 
+        var locPushPos = this.group.worldToLocal(pushPos.clone());
+        // linear part
+        var dv_gl = pushVec.clone().multiplyScalar(pushMag/mass);
+        // console.log(dv_gl);
+        velocity = velocity.add(dv_gl);
+        // angular part 
+        var r = new THREE.Vector3(locPushPos.x, locPushPos.y, 0);
+        var rXdv = r.clone().cross(locPushVec.clone());
+        var dAngVelo = -rXdv.z*mass/momentInertia*pushMag;
+        angVelocity += dAngVelo;
+        // console.log("pvl:",locPushVec, ' ppl: ', locPushPos);
     }
 
     this.getGroup = function(){

@@ -62,9 +62,9 @@ ref.tex = undefined;
 p.chapter1.slide2.sail = {};
 ref = p.chapter1.slide2.sail;
 ref.position = new THREE.Vector3();
-ref.scale = new THREE.Vector3(3,3,3);
+ref.scale = new THREE.Vector3(1,1,1);
 ref.euler = new THREE.Euler(0, 0, Math.PI/2);
-ref.velocity0 = new THREE.Vector3(0.05,0.0,0);
+ref.velocity0 = new THREE.Vector3(0.00,0.0,0);
 
 p.chapter1.slide2.stars = {};
 ref = p.chapter1.slide2.stars;

@@ -29,6 +29,7 @@ var earth;
 var sail;
 var raycaster;
 var stars;
+var testObj;
 
 function testIni(){
     test = true;
@@ -53,6 +54,9 @@ function testIni(){
     stars = new StarField(p.chapter1.slide2.stars);
     scene1.add(stars.getGroup());
 
+    // testObj= new TestObject();
+    // scene1.add(testObj.getGroup());
+
     raycaster = new THREE.Raycaster();
 
     var mmov = function(x,y, ang2D){
@@ -61,7 +65,7 @@ function testIni(){
         laser.getGroup().rotation.copy( p.chapter1.slide2.beam.euler);
         laser.getGroup().rotateX(-ang2D);
 
-        raycaster.set(p.chapter1.slide2.beam.position, 
+        raycaster.set(laser.getGroup().position, 
                 laser.getGroup().getWorldDirection());
     }
 
@@ -72,46 +76,54 @@ function testIni(){
         //set aiming
         mmov(x,y, ang2D);
 
-        raycaster.set(p.chapter1.slide2.beam.position, 
-                        laser.getGroup().getWorldDirection());
-
     }
     var mup = function(x, y, ang2D){
-        // laser.getGroup().scale.z = 0.01;
-        // laser.beam.position.z = 0;
         return;
     }
     controls1 = new FireControls(renderer1, camera1,
                                 p.chapter1.slide2.beam.position, 0,
                                 mdwn, mup, mmov);
-    // controls1 = new THREE.OrbitControls(camera1, renderer1.domElement)
+    // controls1 = new THREE.OrbitControls(camera1, renderer1.domElement);
 
 }
 
+var lastHit = 0;
+
 function testUpdate(){
     var mag =5;
+    var l = laser.getGroup();
+
     if(exists(controls1.isMouseDown)){    
         if(controls1.isMouseDown()){
-            laser.getGroup().scale.z += mag;
+            l.scale.z += mag;
+            // l.visible= true;
 
-            var intersect = raycaster.intersectObject(sail.sailmesh);
+            intersect = raycaster.intersectObject(sail.sailmesh, true);
             // var intersect = raycaster.intersectObject(scene1, true);
-            if(intersect.length){
-                sail.applyForce( laser.getGroup().getWorldDirection(), 
-                                intersect[0].point, 1 );
-                console.log('hit');   
+            // var intersect = raycaster.intersectObject(testObj.main, true);            
+            if(intersect.length) {
+                lastHit = intersect[0];
+                sail.applyForce( l.getWorldDirection(), lastHit.point, 0.05 );
             }
         } else {
             // var mag = 1;
-            var vec = laser.getGroup().getWorldDirection().multiplyScalar(mag);
-            laser.getGroup().position.add( vec );
+            var vec = l.getWorldDirection().multiplyScalar(mag);
+            l.position.add( vec );
         }
     } else {
         controls1.update();
     }
+    //fix length of beam to not pierce the sail
+    var dist = l.position.clone().sub(p.chapter1.slide2.beam.position).length();
+    if( dist + l.scale.z > lastHit.distance ){
+        l.scale.z = lastHit.distance - dist;
+        if(l.scale.z <=0 ) l.scale.z =0.001;
+    }
+
     laser.update();
     earth.update();
     sail.update(frame);
+    // testObj.update(frame);
     stars.update();
     renderer1.render(scene1, camera1);
     return;
