@@ -8,6 +8,7 @@ function StarField(params){
     var num = existsOr(params.num, 1500);
     var minR = existsOr(params.minR, 350);
     var maxR = existsOr(params.maxR, 600);
+    var rotSpeed = existsOr(params.rotSpeed, 0.00003);
 
     var starGeo = new THREE.Geometry();
     var starColorPalette = [0xFFFFFF, 0xBBEEFF, 0xFF8888, 0x8888FF]
@@ -32,9 +33,9 @@ function StarField(params){
     this.group.add(stars);
 
     this.update = function(){
-        var mag =0.00003;
-        this.group.rotation.x += mag;
-        this.group.rotation.y -= 2*mag;
+        var rotSpeed =0.00003;
+        this.group.rotation.x += rotSpeed;
+        this.group.rotation.y -= 2*rotSpeed;
     }
 
     this.getGroup = function(){

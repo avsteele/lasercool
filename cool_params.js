@@ -37,6 +37,7 @@ p.chapter1 = {};
 p.chapter1.beams = {};
 p.chapter1.beams.slide1 = cloneObj(p.std.beam1);
 p.chapter1.beams.slide1.dz = 1/300;
+
 ///slide 2
 p.chapter1.slide2 = {};
 var sl2scale = 5;

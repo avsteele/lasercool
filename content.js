@@ -74,9 +74,14 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     var scene = mainScene; 
     // TODO: Legend
 
+    var pi = Math.PI;
+
     // var descLoc = $('#slide-desc');
     var fetchURL = 'chapter1.html';  //additional content
-    var updateObjects = [];
+    //each object added here will have an update method called each frame
+    var updateObjects = []; 
+    //per-slide objects requiring more complex interaction go into this
+    var slideObjects = {};
     var chapter = 1;
     var slide = 1;
     var chapterContext = this;
@@ -87,17 +92,25 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     var buttons = [];
     buttons[1] = ["#navback", "#buttonControl", "#navreset", "#empty", "#navforward"];
     buttons[2] = ["#navback", "#empty", "#navreset", "#empty", "#navforward"];
-    //TODO: setup camera settings for each scene
-    camera.position.z = 15;
+    
+    /// to hold non-standard slide initalization
+    var slideInit = [];
+    /// to hold slide non-standard updates
+    var slideUpdate = [];
 
     /**
      * common setup for all slides in this chapter
      */
-    this.loadSlideCommon = function(){
+    var loadSlideCommon = function(){
         //empty scene
         emptyTHREEChildTypes(scene, ['Group', 'Mesh', 'Points', 'LineSegments']);
-        //empty controls
-        controls = [];  
+        //empty controls, updateObj, special obj
+        for( c of controls){
+            c.dispose();
+        }
+        controls = [];
+        updateObjects = [];
+        slideObjects = {};
 
         //load slide description
         if( ! replaceSlideDesc( chapter, slide)){
@@ -115,27 +128,27 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         $('#navforward'+controlIDPostFix).on('click', 
             function(event){ 
                 event.preventDefault();
-                slide++;
-                chapterContext.loadSlide(slide);
+                chapterContext.loadSlide(slide+1);
             }
         );
         $('#navback'+controlIDPostFix).on('click', 
             function(event){ 
                 event.preventDefault();
-                slide--;
-                chapterContext.loadSlide(slide);
+                chapterContext.loadSlide(slide-1);
             }
         ); 
     }
 
-    this.loadSlide1 = function(){
-        this.loadSlideCommon();
-        //// slide 1
+    slideInit[1] = function(){
+        loadSlideCommon();
+        ////camera
+        camera.position.z = 15;
+        ///objects
         var l1 = new Laser(p.chapter1.beams.slide1, true, false, false, true);
         l1.togglePhotonVis();
         updateObjects.push(l1);
         scene.add(l1.getGroup());
-
+        ////controls
         controls.push(new THREE.OrbitControls(camera, renderer.domElement));
 
         //button config
@@ -154,23 +167,93 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         );        
     }
 
-    this.loadSlide2 = function(){
-        this.loadSlideCommon();
+    slideInit[2] = function(){
+        loadSlideCommon();
+        // return;
+        // convenience variables
+        var pRef = p.chapter1.slide2;
 
+        //build objects
+        camera.position.z = 35;
+        ////build objects
+        slideObjects.earth = new Earth(p.chapter1.slide2.earth);
+        scene.add(slideObjects.earth.getGroup());
+        updateObjects.push(slideObjects.earth);
+
+        slideObjects.laser =  new Laser(p.chapter1.slide2.beam, false, false, false, false );
+        slideObjects.laser.getGroup().scale.z = 1e-3; //'hide'
+        scene.add(slideObjects.laser.getGroup());
+        updateObjects.push(slideObjects.laser);
+
+        slideObjects.sail = new SolarSail(p.chapter1.slide2.sail);
+        scene.add(slideObjects.sail.getGroup());
+        updateObjects.push(slideObjects.sail);
+
+        slideObjects.stars = new StarField(p.chapter1.slide2.stars);
+        scene.add(slideObjects.stars.getGroup());
+        updateObjects.push(slideObjects.stars);
+
+        /// 
+        slideObjects.raycaster = new THREE.Raycaster();
+
+        ///// setup controls
+        var mmov = function(x,y, ang2D){
+            //reset angle to origin, or may get strange accumulation errors that flip
+            //   unrelated axes
+            slideObjects.laser.getGroup().rotation.copy( pRef.beam.euler);
+            slideObjects.laser.getGroup().rotateX(-ang2D);
+
+            slideObjects.raycaster.set(slideObjects.laser.getGroup().position, 
+                    slideObjects.laser.getGroup().getWorldDirection());
+        }
+        var mdwn = function(x,y, ang2D){
+            //reset
+            slideObjects.laser.getGroup().scale.z = 0.01;  //reset
+            slideObjects.laser.getGroup().position.copy( pRef.beam.position ); //reset
+            //set aiming
+            mmov(x,y, ang2D);
+
+        }
+        controls.push( new FireControls(renderer, camera, pRef.beam.position, 0,
+                                    mdwn, undefined, mmov));
+
+        $('#navreset12').on('click', 
+            function(event){ 
+                event.preventDefault();
+                chapterContext.loadSlide(slide);
+            }
+        );                                    
 
     }
 
-    this.loadSlide = function(){
-        //validate slide change
-        switch(slide){
-            case 1:
-                this.loadSlide1();
-                break;
-            case 2:
-                this.loadSlide2();
-                break;
-            default:
-                throw new Error("unknown slide :"+slide);
+    slideUpdate[2] = function(){ 
+        var mag =5; //TODO: move this elsewhere
+        var l = slideObjects.laser.getGroup();
+        if(controls[0].isMouseDown()){
+            l.scale.z += mag;
+            
+            var intersect = slideObjects.raycaster.intersectObject(slideObjects.sail.sailmesh, true);        
+            if(intersect.length) {
+                lastHit = intersect[0];
+                slideObjects.sail.applyForce( l.getWorldDirection(), lastHit.point, 0.05 );
+            }
+        } else {
+            // var mag = 1;
+            var vec = l.getWorldDirection().multiplyScalar(mag);
+            l.position.add( vec );
+        }
+        //fix length of beam to not pierce the sail
+        var dist = l.position.clone().sub(p.chapter1.slide2.beam.position).length();
+        if( dist + l.scale.z > lastHit.distance ){
+            l.scale.z = lastHit.distance - dist;
+            if(l.scale.z <=0 ) l.scale.z =0.001;
+        }
+    }
+
+    this.loadSlide = function(newSlide){
+        if( exists(slideInit[newSlide]) ){
+            slide = newSlide;
+            slideInit[newSlide]();
         }
     }
 
@@ -183,9 +266,12 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         for( const c of controls){
             c.update()
         }
+
+        if(exists(slideUpdate[slide]))
+            slideUpdate[slide]();
         renderer.render( scene, camera);
         // TODO: update, then render legend
     }
 
-    this.loadSlide();
+    // this.loadSlide(1);
 }
