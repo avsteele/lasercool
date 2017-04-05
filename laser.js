@@ -282,6 +282,76 @@ function mesh_seg_beam(mat, lod=1, segments=4 ){
     return group;
 }
 
+/**
+ * Simplified beam object.  Extends along Z, with one end at the local origin.
+ * @param {Object} params object with initalization parameters 
+ */
+function SimpleLaser(params){
+
+    var group = new THREE.Group();
+    if(exists(params.euler)) 
+        group.rotation.copy( params.euler );
+    if(exists(params.position))
+        group.position.copy( params.position );
+    if(exists(params.scale))
+        group.scale.copy( params.scale );
+
+    if( exists(params.tex) ){
+        var texture = new THREE.TextureLoader().load( params.tex );
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        // this.texture.wrapT = THREE.MirroredRepeatWrapping;
+        // this.texture.repeat.set(Math.ceil(this.ra/5), this.len/5);
+        texture.repeat.set(2, 1);
+    } else var texture = undefined;
+
+
+    var geometry = new THREE.CylinderGeometry(1, 1, 1, 16, 8 );
+    geometry.rotateX(Math.PI/2);  //to be along local z
+    geometry.translate(0,0,0.5);
+    var col = existsOr(params.color, 0x00FF00);
+    var matl = new THREE.MeshBasicMaterial({color:col, map:texture, transparent:true,
+                                        depthWrite:false, opacity: 1.0})
+    var beamMesh = new THREE.Mesh(geometry, matl);
+    group.add(beamMesh);
+
+    //lastCam is an optimization for the routine that aligns the texture to the
+    //   viewer's direction, see beamRot method
+    this.lastCam = new THREE.Vector3(Infinity, Infinity, Infinity);
+
+    this.update = function(frame, camera){
+        if( exists(camera) )
+            this.beamRot(frame, camera);
+        return;
+    }
+
+    this.getGroup = function(){
+        return group;
+    }
+
+    /** 
+     * rotates the beam so that the X axis faces the camera.
+    */
+    this.beamRot = function(frame, camera){
+        if( this.lastCam.equals(camera.position) ) return;
+
+        var lk = camera.position.clone().multiplyScalar(-1); //world
+        var lkl = group.worldToLocal(lk.clone()).multiply(group.scale);
+        var lkl_x = lkl.clone().cross(new THREE.Vector3(0,0,1));  //local z (beam axis)
+        var lkl_xn = lkl_x.clone().normalize();
+
+        // console.log('lk: ',lk);
+        // console.log('lkl: ', lkl);
+        // console.log('x: ', lkl_x);
+        // console.log('xn: ', lkl_xn);
+        // console.log('ang: ', ang*180/Math.PI);
+        //epsilon fixed math.sign==0 problem
+        var ang = Math.asin(lkl_xn.x)*Math.sign(-lkl_xn.y+Number.EPSILON);
+        beamMesh.rotation.z = ang;
+        this.lastCam = camera.position.clone();
+    }
+}
+
 function particleBeam(  num, color, 
                         ra, rb, len, 
                         tex, pointSize = 0.1){

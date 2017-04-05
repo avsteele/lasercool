@@ -23,14 +23,52 @@ var frame=0; //frame counter
 
 //////testing
 
+var earth,l1;
+
 function testIni(){
+    test=true;
+    earth = new Earth(p.chapter1.slide2.earth);
+    scene1.add(earth.getGroup());
+    camera1.position.z = 100;
+
+    // var ax = new THREE.AxisHelper(10);
+    // ax.position.copy( earth.getGroup().position );
+    
+    // scene1.add(ax);
+
+    // if(navigator.geolocation){
+    //     navigator.geolocation.getCurrentPosition(function(position){
+    //         earth.rotateTo(position.coords.latitude,position.coords.longitude);
+    //     });
+    // }
+
+    controls1 = new THREE.OrbitControls(camera1, renderer1.domElement);
+
+    // var geo = new THREE.PlaneGeometry(10,10,2,2);
+    // // var tex = new THREE.TextureLoader().load( "assets/tmp.png" );
+    // var tex = new THREE.TextureLoader().load( "assets/lin_grad.svg" );
+    // // var tex;
+    // var mat = new THREE.MeshBasicMaterial(
+    //         {color:0x00FF00, transparent: true, depthWrite:false, map:tex, opacity: 1});
+    // var mesh = new THREE.Mesh(geo,mat);
+    // mesh.position.z=1;
+
+    // scene1.add(mesh);
+
+    l1 = new SimpleLaser({euler: new THREE.Euler(0, 0, 0), scale: new THREE.Vector3(1,1,10), tex: "assets/beam_grad_tex.svg"});
+    scene1.add(l1.getGroup());
 
 }
+var lati = 39.23;
+var longi = -77;
+function testUpdate(frame){
+    // earth.rotateTo(lati, longi);
+    // l1.camRot(camera1);
+    l1.update(frame, camera1);
 
-var lastHit = 0;
-
-function testUpdate(){
-
+    // longi+=1.1;
+    // lati+=0.33
+    controls1.update();
     renderer1.render(scene1, camera1);
     return;
 }
@@ -62,7 +100,6 @@ function init() {
     var light = new THREE.AmbientLight( 0x888888);
     scene1.add(light);
 
-    // testIni();
     $('nav').on('click', '#navc1', 
         function(event){
             event.preventDefault();
@@ -88,7 +125,7 @@ function init() {
             "Longitude: ", position.coords.longitude); 
     }
 
-    // testIni();
+    testIni();
 }
 /////////////////////main////////////////////////
 function animate(){
@@ -98,8 +135,8 @@ function animate(){
 
     requestAnimationFrame(animate);
 
-    // if(typeof test !== "undefined")
-    //     testUpdate(frame);
+    if(typeof test !== "undefined")
+        testUpdate(frame);
 
     if(exists(currentChapter)) 
         currentChapter.update(frame);

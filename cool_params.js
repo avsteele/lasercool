@@ -43,7 +43,8 @@ p.chapter1.slide2 = {};
 var sl2scale = 5;
 p.chapter1.slide2.earth = {};
 var ref = p.chapter1.slide2.earth;
-ref.euler = new THREE.Euler( Math.PI/10, 0, 0);
+// ref.euler = new THREE.Euler( Math.PI/10, 0, 0);
+ref.euler = new THREE.Euler( 0, 0, 0);
 ref.scale = new THREE.Vector3( sl2scale, sl2scale, sl2scale);
 ref.position = new THREE.Vector3( -5*sl2scale, 0 , 0 );
 //special thanks:
@@ -58,7 +59,7 @@ ref.euler = new THREE.Euler( 0, Math.PI/2, 0, 'YXZ');
 ref.position.x = -ref.scale.z/2+sl2scale;
 ref.opacity = 1.0;
 ref.geoOffset = new THREE.Vector3( 0, 0, 0.5);
-ref.tex = undefined;
+ref.tex = "assets/beam_grad_tex.svg";
 
 p.chapter1.slide2.sail = {};
 ref = p.chapter1.slide2.sail;

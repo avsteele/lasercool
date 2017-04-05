@@ -172,6 +172,7 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         // return;
         // convenience variables
         var pRef = p.chapter1.slide2;
+        
 
         //build objects
         camera.position.z = 35;
@@ -179,8 +180,15 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         slideObjects.earth = new Earth(p.chapter1.slide2.earth);
         scene.add(slideObjects.earth.getGroup());
         updateObjects.push(slideObjects.earth);
+        if(navigator.geolocation){
+            navigator.geolocation.getCurrentPosition(function(position){
+                slideObjects.earth.rotateTo(position.coords.latitude,position.coords.longitude);
+            });
+        }
+        // slideObjects.earth.rotateTo( 33, -77);
 
-        slideObjects.laser =  new Laser(p.chapter1.slide2.beam, false, false, false, false );
+        // slideObjects.laser =  new Laser(p.chapter1.slide2.beam, false, false, false, false );
+        slideObjects.laser =  new SimpleLaser(p.chapter1.slide2.beam);
         slideObjects.laser.getGroup().scale.z = 1e-3; //'hide'
         scene.add(slideObjects.laser.getGroup());
         updateObjects.push(slideObjects.laser);
@@ -195,6 +203,7 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
 
         /// 
         slideObjects.raycaster = new THREE.Raycaster();
+        slideObjects.lastHit = {distance: 1e9};  //initalize to 'very big'
 
         ///// setup controls
         var mmov = function(x,y, ang2D){
@@ -234,8 +243,10 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
             
             var intersect = slideObjects.raycaster.intersectObject(slideObjects.sail.sailmesh, true);        
             if(intersect.length) {
-                lastHit = intersect[0];
-                slideObjects.sail.applyForce( l.getWorldDirection(), lastHit.point, 0.05 );
+                slideObjects.lastHit = intersect[0];
+                slideObjects.sail.applyForce( l.getWorldDirection(), slideObjects.lastHit.point, 0.05 );
+            } else {
+                slideObjects.lastHit = 1e9;
             }
         } else {
             // var mag = 1;
@@ -244,8 +255,8 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         }
         //fix length of beam to not pierce the sail
         var dist = l.position.clone().sub(p.chapter1.slide2.beam.position).length();
-        if( dist + l.scale.z > lastHit.distance ){
-            l.scale.z = lastHit.distance - dist;
+        if( dist + l.scale.z > slideObjects.lastHit.distance ){
+            l.scale.z = slideObjects.lastHit.distance - dist;
             if(l.scale.z <=0 ) l.scale.z =0.001;
         }
     }

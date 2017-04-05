@@ -5,8 +5,11 @@ function Earth(params){
     this.group.position.copy( params.position );
     this.group.scale.copy( params.scale );
 
+    var longitude_adjust = 100;
     if(exists(params.tex))
-        var tex = new THREE.TextureLoader().load( 'assets/earth_tex_sm.jpg' );
+        var tex = new THREE.TextureLoader().load( params.tex );
+        if( params.tex == 'assets/earth_tex_sm.jpg')
+            longitude_adjust = 157;
     else
         var tex = undefined;
 
@@ -15,13 +18,26 @@ function Earth(params){
         emissive: 0x444444,
         map: tex});
 
-    var mesh = new THREE.Mesh(geo, mat);
+    var sphereMesh = new THREE.Mesh(geo, mat);
     // mesh.position.x = -len/2;
-    this.group.add(mesh);
+    this.group.add(sphereMesh);
+
+    var ax = new THREE.AxisHelper(10);
+    this.group.add(ax);
 
     this.update = function(){
-        this.group.rotation.y += Math.PI/3000;
+        // this.group.rotation.y += Math.PI/3000;
         return;
+    }
+
+    this.rotateTo = function(lat,long){
+        //get my texture and value in agreement with position along global +X
+        var llong = long+longitude_adjust;   
+        var sph = new THREE.Spherical(1, lat*Math.PI/180+Math.PI/2, (llong%180)*Math.PI/180);
+        var lk = new THREE.Vector3().setFromSpherical(sph)
+        // var lkp = lk.clone().add(this.group.position);
+        // this.group.lookAt(lkp);
+        sphereMesh.lookAt(lk);
     }
 
     this.getGroup = function(){
