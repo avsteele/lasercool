@@ -142,14 +142,15 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     slideInit[1] = function(){
         loadSlideCommon();
         ////camera
-        camera.position.z = 15;
+        camera.position.set(0,0,15);
+        camera.rotation.set(0,0,0);
         ///objects
         var l1 = new Laser(p.chapter1.beams.slide1, true, false, false, true);
         l1.togglePhotonVis();
         updateObjects.push(l1);
         scene.add(l1.getGroup());
         ////controls
-        controls.push(new THREE.OrbitControls(camera, renderer.domElement));
+        // controls.push(new THREE.OrbitControls(camera, renderer.domElement));
 
         //button config
         $('#buttonControl11').on('click', 'button', 
@@ -169,15 +170,24 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
 
     slideInit[2] = function(){
         loadSlideCommon();
-        // return;
+        //camera
+        var posTrack = new THREE.CatmullRomCurve3(
+            [new THREE.Vector3(-100,100,-100), new THREE.Vector3(0,66,-100),
+            new THREE.Vector3(100,33,0), new THREE.Vector3(0,0,35) ]);
+        var lookTrack = new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,0)]);
+        var upTrack = new THREE.CatmullRomCurve3([new THREE.Vector3(0,1,0),new THREE.Vector3(0,1,0)]);
+        
+        cameraTrack = new camFly( 0.003, posTrack, lookTrack, upTrack, camera); 
+        updateObjects.push(cameraTrack);
+
+        // camera.position.set(0,0,35);
+        // camera.rotation.set(0,0,0);
+
         // convenience variables
         var pRef = p.chapter1.slide2;
         
-
-        //build objects
-        camera.position.z = 35;
         ////build objects
-        slideObjects.earth = new Earth(p.chapter1.slide2.earth);
+        slideObjects.earth = new Earth(pRef.earth);
         scene.add(slideObjects.earth.getGroup());
         updateObjects.push(slideObjects.earth);
         if(navigator.geolocation){
@@ -185,19 +195,18 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
                 slideObjects.earth.rotateTo(position.coords.latitude,position.coords.longitude);
             });
         }
-        // slideObjects.earth.rotateTo( 33, -77);
 
-        // slideObjects.laser =  new Laser(p.chapter1.slide2.beam, false, false, false, false );
-        slideObjects.laser =  new SimpleLaser(p.chapter1.slide2.beam);
+        // slideObjects.laser =  new Laser(pRef.beam, false, false, false, false );
+        slideObjects.laser =  new SimpleLaser(pRef.beam);
         slideObjects.laser.getGroup().scale.z = 1e-3; //'hide'
         scene.add(slideObjects.laser.getGroup());
         updateObjects.push(slideObjects.laser);
 
-        slideObjects.sail = new SolarSail(p.chapter1.slide2.sail);
+        slideObjects.sail = new SolarSail(pRef.sail);
         scene.add(slideObjects.sail.getGroup());
         updateObjects.push(slideObjects.sail);
 
-        slideObjects.stars = new StarField(p.chapter1.slide2.stars);
+        slideObjects.stars = new StarField(pRef.stars);
         scene.add(slideObjects.stars.getGroup());
         updateObjects.push(slideObjects.stars);
 
@@ -210,6 +219,7 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
             //reset angle to origin, or may get strange accumulation errors that flip
             //   unrelated axes
             slideObjects.laser.getGroup().rotation.copy( pRef.beam.euler);
+            if( Math.abs(ang2D) > Math.PI/2 ) ang2D = Math.sign(ang2D)*Math.PI/2;
             slideObjects.laser.getGroup().rotateX(-ang2D);
 
             slideObjects.raycaster.set(slideObjects.laser.getGroup().position, 
@@ -236,10 +246,17 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     }
 
     slideUpdate[2] = function(){ 
-        var mag =5; //TODO: move this elsewhere
+        //aliases
+        var pRef = p.chapter1.slide2;
         var l = slideObjects.laser.getGroup();
+
+        // camera.position.z -= 1;
+        // camera.lookAt(new THREE.Vector3(0,0,0));
+
+        var lightSpeed = 2;
+
         if(controls[0].isMouseDown()){
-            l.scale.z += mag;
+            l.scale.z += lightSpeed;
             
             var intersect = slideObjects.raycaster.intersectObject(slideObjects.sail.sailmesh, true);        
             if(intersect.length) {
@@ -249,12 +266,12 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
                 slideObjects.lastHit = 1e9;
             }
         } else {
-            // var mag = 1;
-            var vec = l.getWorldDirection().multiplyScalar(mag);
+            // var lightSpeed = 1;
+            var vec = l.getWorldDirection().multiplyScalar(lightSpeed);
             l.position.add( vec );
         }
         //fix length of beam to not pierce the sail
-        var dist = l.position.clone().sub(p.chapter1.slide2.beam.position).length();
+        var dist = l.position.clone().sub(pRef.beam.position).length();
         if( dist + l.scale.z > slideObjects.lastHit.distance ){
             l.scale.z = slideObjects.lastHit.distance - dist;
             if(l.scale.z <=0 ) l.scale.z =0.001;

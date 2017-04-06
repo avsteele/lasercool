@@ -23,13 +23,15 @@ var frame=0; //frame counter
 
 //////testing
 
-var earth,l1;
+var earth,l1, cameraTrack;
 
 function testIni(){
     test=true;
     earth = new Earth(p.chapter1.slide2.earth);
     scene1.add(earth.getGroup());
-    camera1.position.z = 100;
+    camera1.position.set(0,0,100);
+    camera1.rotation.set(0,0,0);
+    // camera1.position.z = 100;
 
     // var ax = new THREE.AxisHelper(10);
     // ax.position.copy( earth.getGroup().position );
@@ -58,6 +60,14 @@ function testIni(){
     l1 = new SimpleLaser({euler: new THREE.Euler(0, 0, 0), scale: new THREE.Vector3(1,1,10), tex: "assets/beam_grad_tex.svg"});
     scene1.add(l1.getGroup());
 
+    var posTrack = new THREE.CatmullRomCurve3(
+        [new THREE.Vector3(-100,100,-100), new THREE.Vector3(0,66,-100),
+        new THREE.Vector3(100,33,0), new THREE.Vector3(0,0,50) ]);
+    var lookTrack = new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,0)]);
+    var upTrack = new THREE.CatmullRomCurve3([new THREE.Vector3(0,1,0),new THREE.Vector3(0,1,0)]);
+    
+    cameraTrack = new camFly( 0.003, posTrack, lookTrack, upTrack, camera1); 
+
 }
 var lati = 39.23;
 var longi = -77;
@@ -65,7 +75,7 @@ function testUpdate(frame){
     // earth.rotateTo(lati, longi);
     // l1.camRot(camera1);
     l1.update(frame, camera1);
-
+    cameraTrack.update();
     // longi+=1.1;
     // lati+=0.33
     controls1.update();
@@ -125,7 +135,7 @@ function init() {
             "Longitude: ", position.coords.longitude); 
     }
 
-    testIni();
+    // testIni();
 }
 /////////////////////main////////////////////////
 function animate(){

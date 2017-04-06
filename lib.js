@@ -84,6 +84,21 @@ function emptyTHREEChildTypes(threeObj3D, types){
     }
 }
 
+/// Camera helpers ////
+
+function camFly(speed, posCurve, lookCurve, upCurve, camera){
+
+    this.pos = 0;
+
+    this.update = function(){
+        if( this.pos >=1 ) return;  //done
+        this.pos += speed;
+        camera.position.copy( posCurve.getPoint(this.pos) );
+        camera.lookAt( lookCurve.getPoint(this.pos))
+        camera.up.copy( upCurve.getPoint(this.pos) );
+    }
+}
+
 /////assorted helpers //////
 function rand(min,max){
     return Math.random()*(max-min)+min
