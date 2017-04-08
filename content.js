@@ -45,10 +45,10 @@ function onEntryAnimateStd(element){
     element.fadeIn({duration:400});
 }
 
-function replaceSlideDesc(chapter, slide){
+function replaceSlideDesc( slide){
     var loc = $('#slide-desc');
     
-    var selector = '#c'+chapter+'s'+slide;
+    var selector = '#slide'+slide;
     if( ! $(selector).length) return false;  //don't have it
     newDesc = $(selector).clone().attr("id",selector+'-clone');
     loc.empty();
@@ -67,7 +67,7 @@ function loadChildren(container, idArray, idPostFix){
     }
 }
 
-var Chapter1 = function(mainRenderer, mainCamera, mainScene,
+var Slides = function(mainRenderer, mainCamera, mainScene,
                         legendRender, legendCamera, legendScene){
     var renderer = mainRenderer;
     var camera = mainCamera;
@@ -77,14 +77,13 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     var pi = Math.PI;
 
     // var descLoc = $('#slide-desc');
-    var fetchURL = 'chapter1.html';  //additional content
+    var fetchURL = 'slideText.html';  //additional content
     //each object added here will have an update method called each frame
     var updateObjects = []; 
     //per-slide objects requiring more complex interaction go into this
     var slideObjects = {};
-    var chapter = 1;
-    var slide = 1;
-    var chapterContext = this;
+    var currentSlide = 1;
+    var context = this;
 
     //keyboard, mouse, touch control sets
     var controls = [];
@@ -92,6 +91,7 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     var buttons = [];
     buttons[1] = ["#navback", "#buttonControl", "#navreset", "#empty", "#navforward"];
     buttons[2] = ["#navback", "#empty", "#navreset", "#empty", "#navforward"];
+    buttons[3] = ["#navback", "#buttonControl", "#navreset", "#empty", "#navforward"];
     
     /// to hold non-standard slide initalization
     var slideInit = [];
@@ -99,9 +99,9 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
     var slideUpdate = [];
 
     /**
-     * common setup for all slides in this chapter
+     * common setup for all slides
      */
-    var loadSlideCommon = function(){
+    var loadSlideCommon = function(slide){
         //empty scene
         emptyTHREEChildTypes(scene, ['Group', 'Mesh', 'Points', 'LineSegments']);
         //empty controls, updateObj, special obj
@@ -113,39 +113,45 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         slideObjects = {};
 
         //load slide description
-        if( ! replaceSlideDesc( chapter, slide)){
-            $.get( fetchURL, function(result){
-                $('body').append(result);
-                replaceSlideDesc(chapter,slide);
-            });
+        //note: cache is needed otherwise it sometime doesnt fetch 
+        //    the latest version
+        if( ! replaceSlideDesc( slide)){
+            $.get( 
+                {url:fetchURL, 
+                success: function(result){
+                    $('body').append(result);
+                    replaceSlideDesc( slide);
+                },
+                cache: false}
+            );
         }
 
         /// build nav/control bar
         var controlContainer = $('#controls');
-        var controlIDPostFix =  chapter.toString()+slide;
+        var controlIDPostFix =  slide.toString();
         loadChildren(controlContainer, buttons[slide], controlIDPostFix);
 
         $('#navforward'+controlIDPostFix).on('click', 
             function(event){ 
                 event.preventDefault();
-                chapterContext.loadSlide(slide+1);
+                context.loadSlide(slide+1);
             }
         );
         $('#navback'+controlIDPostFix).on('click', 
             function(event){ 
                 event.preventDefault();
-                chapterContext.loadSlide(slide-1);
+                context.loadSlide(slide-1);
             }
-        ); 
+        );
     }
 
     slideInit[1] = function(){
-        loadSlideCommon();
+        loadSlideCommon(1);
         ////camera
         camera.position.set(0,0,15);
         camera.rotation.set(0,0,0);
         ///objects
-        var l1 = new Laser(p.chapter1.beams.slide1, true, false, false, true);
+        var l1 = new Laser(p.content.slide1.beam, true, false, false, true);
         l1.togglePhotonVis();
         updateObjects.push(l1);
         scene.add(l1.getGroup());
@@ -153,23 +159,23 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         // controls.push(new THREE.OrbitControls(camera, renderer.domElement));
 
         //button config
-        $('#buttonControl11').on('click', 'button', 
+        $('#buttonControl1').on('click', 'button', 
             function(){ 
                 l1.togglePhotonVis();
                 swapClass($(this), 'on', 'off');
             }
         ).find('button').text('Photons');
 
-        $('#navreset11').on('click', 
+        $('#navreset1').on('click', 
             function(event){ 
                 event.preventDefault();
-                chapterContext.loadSlide(slide);
+                context.loadSlide(currentSlide);
             }
         );        
     }
 
     slideInit[2] = function(){
-        loadSlideCommon();
+        loadSlideCommon(2);
         //camera
         var posTrack = new THREE.CatmullRomCurve3(
             [new THREE.Vector3(-100,100,-100), new THREE.Vector3(0,66,-100),
@@ -177,14 +183,11 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         var lookTrack = new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,0)]);
         var upTrack = new THREE.CatmullRomCurve3([new THREE.Vector3(0,1,0),new THREE.Vector3(0,1,0)]);
         
-        cameraTrack = new camFly( 0.003, posTrack, lookTrack, upTrack, camera); 
+        cameraTrack = new objFly( 0.003, posTrack, lookTrack, upTrack, camera); 
         updateObjects.push(cameraTrack);
 
-        // camera.position.set(0,0,35);
-        // camera.rotation.set(0,0,0);
-
         // convenience variables
-        var pRef = p.chapter1.slide2;
+        var pRef = p.content.slide2;
         
         ////build objects
         slideObjects.earth = new Earth(pRef.earth);
@@ -236,18 +239,17 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         controls.push( new FireControls(renderer, camera, pRef.beam.position, 0,
                                     mdwn, undefined, mmov));
 
-        $('#navreset12').on('click', 
+        $('#navreset2').on('click', 
             function(event){ 
                 event.preventDefault();
-                chapterContext.loadSlide(slide);
+                context.loadSlide(currentSlide);
             }
-        );                                    
-
+        );
     }
 
-    slideUpdate[2] = function(){ 
+    slideUpdate[2] = function(frame){ 
         //aliases
-        var pRef = p.chapter1.slide2;
+        var pRef = p.content.slide2;
         var l = slideObjects.laser.getGroup();
 
         // camera.position.z -= 1;
@@ -278,9 +280,66 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
         }
     }
 
+    slideInit[3] = function(){
+        loadSlideCommon(3);
+        var pRef = p.content.slide3;
+        ////camera
+        camera.position.set(0,0,15);
+        camera.rotation.set(0,0,0);
+        ///objects
+        var l1 = new Laser(pRef.beam, false, false, false, true);
+        // l1.togglePhotonVis();
+        updateObjects.push(l1);
+        scene.add(l1.getGroup());
+
+        var atomTex = new THREE.TextureLoader().load(pRef.atom.atomTexPath);
+        var photTex = new THREE.TextureLoader().load(pRef.atom.photTexPath);
+        slideObjects.atoms = [];
+
+        ////controls
+        // controls.push(new THREE.OrbitControls(camera, renderer.domElement));
+
+        //button config
+        $('#buttonControl3').on('click', 'button', 
+            function(){ 
+                if( slideObjects.atoms.length < p.content.slide3.maxAtoms){
+                    var params = cloneObj(pRef.atom);
+                    params.position.x += 2*(Math.random()-0.5);
+                    params.velocity.y *= 1.5*(Math.random()+0.5);
+                    var a = new Atom(params, atomTex, photTex);
+                    slideObjects.atoms.push(a);
+                    scene.add(a.getGroup());
+                    console.log('release atom');
+                }
+            }
+        ).find('button').text('Add Atom');
+
+        $('#navreset3').on('click', 
+            function(event){ 
+                event.preventDefault();
+                context.loadSlide(currentSlide);
+            }
+        );
+    }
+
+    slideUpdate[3] = function(){
+        pRef = p.content.slide3;
+        //iterate over slideObjects, remove atoms out of frame
+        for( var i=slideObjects.atoms.length-1; i>=0;){
+            var o = slideObjects.atoms[i];
+            if( o.constructor == Atom && o.position.y > pRef.maxY){
+                slideObjects.atoms.splice(i, 1);
+            } else {
+                i--;
+            }
+        }
+        for( const a of slideObjects.atoms )
+            a.update(frame, [updateObjects[0]]);  //pass the lasers
+    }
+
     this.loadSlide = function(newSlide){
         if( exists(slideInit[newSlide]) ){
-            slide = newSlide;
+            currentSlide = newSlide;
             slideInit[newSlide]();
         }
     }
@@ -295,8 +354,8 @@ var Chapter1 = function(mainRenderer, mainCamera, mainScene,
             c.update()
         }
 
-        if(exists(slideUpdate[slide]))
-            slideUpdate[slide]();
+        if(exists(slideUpdate[currentSlide]))
+            slideUpdate[currentSlide](frame);
         renderer.render( scene, camera);
         // TODO: update, then render legend
     }

@@ -10,7 +10,7 @@ var scene1; // will be a THREE.Scene
 var renderer1;  // will be a THREE.WebGLRenderer
 var controls1;
 
-var currentChapter;
+var slides;
 var demo1;
 var test;
 // var stats = new Stats();
@@ -27,8 +27,8 @@ var earth,l1, cameraTrack;
 
 function testIni(){
     test=true;
-    earth = new Earth(p.chapter1.slide2.earth);
-    scene1.add(earth.getGroup());
+    earth = new Earth(p.content.slide2.earth);
+    // scene1.add(earth.getGroup());
     camera1.position.set(0,0,100);
     camera1.rotation.set(0,0,0);
     // camera1.position.z = 100;
@@ -38,27 +38,16 @@ function testIni(){
     
     // scene1.add(ax);
 
-    // if(navigator.geolocation){
-    //     navigator.geolocation.getCurrentPosition(function(position){
-    //         earth.rotateTo(position.coords.latitude,position.coords.longitude);
-    //     });
-    // }
-
     controls1 = new THREE.OrbitControls(camera1, renderer1.domElement);
 
-    // var geo = new THREE.PlaneGeometry(10,10,2,2);
-    // // var tex = new THREE.TextureLoader().load( "assets/tmp.png" );
-    // var tex = new THREE.TextureLoader().load( "assets/lin_grad.svg" );
-    // // var tex;
-    // var mat = new THREE.MeshBasicMaterial(
-    //         {color:0x00FF00, transparent: true, depthWrite:false, map:tex, opacity: 1});
-    // var mesh = new THREE.Mesh(geo,mat);
-    // mesh.position.z=1;
-
-    // scene1.add(mesh);
-
     l1 = new SimpleLaser({euler: new THREE.Euler(0, 0, 0), scale: new THREE.Vector3(1,1,10), tex: "assets/beam_grad_tex.svg"});
-    scene1.add(l1.getGroup());
+    // scene1.add(l1.getGroup());
+
+    var atomTex = new THREE.TextureLoader().load(p.std.atom1.atomTexPath);
+    var photTex = new THREE.TextureLoader().load(p.std.atom1.photTexPath);
+    for(var a=0;a<5;a++){
+        scene1.add((new Atom(p.std.atom1, atomTex, photTex)).getGroup());
+    }
 
     var posTrack = new THREE.CatmullRomCurve3(
         [new THREE.Vector3(-100,100,-100), new THREE.Vector3(0,66,-100),
@@ -66,7 +55,7 @@ function testIni(){
     var lookTrack = new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,0)]);
     var upTrack = new THREE.CatmullRomCurve3([new THREE.Vector3(0,1,0),new THREE.Vector3(0,1,0)]);
     
-    cameraTrack = new camFly( 0.003, posTrack, lookTrack, upTrack, camera1); 
+    cameraTrack = new objFly( 0.003, posTrack, lookTrack, upTrack, camera1); 
 
 }
 var lati = 39.23;
@@ -113,15 +102,16 @@ function init() {
     $('nav').on('click', '#navc1', 
         function(event){
             event.preventDefault();
-            currentChapter = new Chapter1(renderer1, camera1, scene1);
-            currentChapter.loadSlide(1);
+            slides = new Slides(renderer1, camera1, scene1);
+            slides.loadSlide(1);
             console.log('load chapter 1');
         }
     );
     $('nav').on('click', '#navc2', 
         function(event){
             event.preventDefault();
-            // currentChapter = new Chapter2(renderer1, camera1, scene1);
+            slides = new Slides(renderer1, camera1, scene1);
+            slides.loadSlide(3);
             console.log('load chapter 2');
         }
     );
@@ -148,8 +138,8 @@ function animate(){
     if(typeof test !== "undefined")
         testUpdate(frame);
 
-    if(exists(currentChapter)) 
-        currentChapter.update(frame);
+    if(exists(slides)) 
+        slides.update(frame);
 
     // stats.begin();
 

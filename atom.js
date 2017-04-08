@@ -6,7 +6,7 @@ function Atom( params={}, atomTex, photTex){
     this.excited = false; //ground state initally
     this.excite_dv = existsOr(params.excite_dv, 0.001);  //velocity change on state change
     //TODO: allow initial position/velocity generators (check types)
-    this.velocity = exists(params.velocity)? params.position.clone():new THREE.Vector3();
+    this.velocity = exists(params.velocity)? params.velocity.clone():new THREE.Vector3();
     this.position = exists(params.position)? params.position.clone():new THREE.Vector3();
     this.excitePrBase = existsOr(params.exciteProb, 0.1);
     this.decayPrBase = existsOr(params.decayProb, 0.1);
@@ -24,7 +24,7 @@ function Atom( params={}, atomTex, photTex){
                 transparent:true, opacity: 1.0, depthWrite: false,
                 blending: THREE.AdditiveBlending});
     this.body = new THREE.Sprite(mat);
-    this.body.scale.copy( new THREE.Vector3().addScalar(params.scale_g) );
+    this.body.scale.copy( new THREE.Vector3().addScalar(this.scale_g) );
     this.body.position.copy( this.position );    
     this.group.add(this.body);
 

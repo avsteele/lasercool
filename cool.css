@@ -70,15 +70,6 @@ section.summary ol {
     padding-bottom: 1em;
 }*/
 
-/*
-section.chapter.live {
-    transition: opacity 1s linear;
-    opacity: 1;
-/
-section.chapter {
-    opacity: 0;
-}*/
-
 main.oGLRender {
     background-color: black;
     grid-area: main;

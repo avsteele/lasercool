@@ -86,16 +86,25 @@ function emptyTHREEChildTypes(threeObj3D, types){
 
 /// Camera helpers ////
 
-function camFly(speed, posCurve, lookCurve, upCurve, camera){
+/**
+ * Keeps trck of a few splines to be interpolated along to manipulate the
+ * position and orientation of an object. 
+ * @param {*} speed 
+ * @param {*} posCurve THREE.curve implementing a getPoint returning a Vector3
+ * @param {*} lookCurve 
+ * @param {*} upCurve 
+ * @param {*} object any THREE.js Object3D 
+ */
+function objFly(speed, posCurve, lookCurve, upCurve, object){
 
     this.pos = 0;
 
     this.update = function(){
         if( this.pos >=1 ) return;  //done
         this.pos += speed;
-        camera.position.copy( posCurve.getPoint(this.pos) );
-        camera.lookAt( lookCurve.getPoint(this.pos))
-        camera.up.copy( upCurve.getPoint(this.pos) );
+        object.position.copy( posCurve.getPoint(this.pos) );
+        object.up.copy( upCurve.getPoint(this.pos) );
+        object.lookAt( lookCurve.getPoint(this.pos))
     }
 }
 
