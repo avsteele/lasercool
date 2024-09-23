@@ -50,9 +50,9 @@ function Atom( params={}, atomTex, photTex){
 /**
  * Advances internal state of atom one time step.  Incorporates interation with
  * and array of laser beams
- * @param {number} frame a frame number (integer)
+ * @param {Number} frame a frame number (integer)
  * @param {Array} lasers Laser objects that may excite this atom
- * @param {number} dt time step
+ * @param {Number} dt time step
  */
 Atom.prototype.update = function(frame, lasers, dt=1){
     /////update physical representation
