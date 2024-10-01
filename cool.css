@@ -28,8 +28,9 @@ body {
     grid-template-columns: var(--side_w) auto;
     grid-template-areas: "side main"
                          "side nav";
-    height: 99.9vh;
-    width: 99.9vw;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
 }
 
 canvas { 
@@ -53,6 +54,7 @@ p {
 
 section.summary {
     grid-area: side;
+    overflow-y: auto;
 }
 
 a {
@@ -105,6 +107,7 @@ nav.bottom {
 
     display: flex;
     flex-direction: column;
+    justify-content: center;
 }
 
 #controls li a {
